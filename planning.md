@@ -45,11 +45,9 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
      numbers fit the structure of your documents.
      A review-heavy corpus warrants different chunking than a long FAQ. -->
 
-**Chunk size:**
+**Chunking strategy:** Semantic chunking using LangChain and bge-base-en-v1.5 as embedding model
 
-**Overlap:**
-
-**Reasoning:**
+**Reasoning:** Fixed-size chunking is inflexible considering each document tends to have differing writing styles, and can also have references across multiple files. Some documents have all the answers within 200-300 characters, while other span across paragraphs (1000-1500 characters.) Semantic chunking is chosen over recursive chunking in this case since there are a lot of documents that may have answers for different parts of the the question across different documents. It is better to chunk the text semantically to retain its meaning. While recursive chunking can still remain a good fallback as the documents are already formated with hierarchical structure. bge-base-en-v1.5 is chosen over all-MiniLM-L6-v2 in this case to handle higher token windows (256 tokens vs 512 tokens)
 
 ---
 
@@ -61,11 +59,11 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
      would you weigh in choosing a different embedding model — context length, multilingual
      support, accuracy on domain-specific text, latency? -->
 
-**Embedding model:**
+**Embedding model:** bge-base-en-v1.5
 
-**Top-k:**
+**Top-k:** 5 with distance threshold below 0.7
 
-**Production tradeoff reflection:**
+**Production tradeoff reflection:** For production, I'd raise the top-k to be 10 to allow more related queries to be passed to Groq to provide a better cross-referenced response for queries with higher complexities. Without constraints, I'd choose Gemini Embedding 2 for multi-modal support since players may sometimes ask problems using screenshots of their game and it also supports multi-lingual, which supports non-English speakers who are main player base for this game. Gemini embedding 2 can also handle niche gaming jargons and responds with low latency, optimized for real-time needs.
 
 ---
 
@@ -78,11 +76,11 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
 
 | # | Question | Expected answer |
 |---|----------|-----------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| 1 | What is a wave sniping? |  Wave sniping is when defensive troops land into a very small time gap between two attacks – literally one second or so. |
+| 2 | Given Travian Plus is off, what tribe can build both resource fields and building simultaneously | Romans |
+| 3 | What is an operational hammer? | A mid-sized army, normally trained only in Barracks, Stables and Workshop (without Great Stables/Great Barracks) and which is used in everyday offense operations. |
+| 4 | How do you win in normal Travian: Legends game? | The first player or alliance to build their World Wonder to **level 100** wins the server. |
+| 5 | What are the strengths of Mongolian troops | No information could be found within the game guides regarding the provided question. |
 
 ---
 
@@ -92,9 +90,15 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
      Consider: noisy or inconsistent documents, missing source attribution, off-topic
      retrieval, chunks that split key information across boundaries. -->
 
-1.
+1. **Inconsistent information across official and unoffical guides:** Two guides are made at different dates, with the official guides being more up-to-date. The unofficial guides are accumulation of old official guides and user-posted guides, which can span across several versions of the game.
 
-2.
+2. **Chunk size over token window limit for embedding:** Initial planning utilized `all-MiniLM-L6-v2` for embedding, but then I soon realized the limitations of 256 tokens limit with the semantic chunking potentially using 400-512 tokens each chunk.
+
+3. **Information mixed up:** There are quite a few different tribes in Travian with many similar strengths/weaknesses i.e. Gauls and Egyptians specializing in defense, but Gauls are fast while Egyptians are slow. The response may return Egyptians as high in defense and fast, from similar information about high defense from Gauls.
+
+4. **Specific references for each paragraph for long query:** A query with multiple questions will trigger more retrievals to be used. This can make it difficult for the LLM to provide good reference at the right spot if there are 2 answers within the same paragraph.
+
+5. **Names not recognized semantically:** There are several names i.e. Praetorian, Druidrider, Paladin, etc. The names may not be well connected to the information and context around it as the names contain no meanings within themselves.
 
 ---
 
@@ -105,6 +109,30 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
      Label each stage with the tool or library you're using.
      You can use ASCII art, a Mermaid diagram, or embed a sketch as an image.
      You'll use this diagram as context when prompting AI tools to implement each stage. -->
+```mermaid
+flowchart TD
+     DB[(ChromaDB)]
+
+     subgraph Group1 ["Offline one-time document processing"]
+          A[Raw md input documents] --> B[ingest.py<br>Load, strip markdown syntax, and clean documents before chunking]
+          B --> C["ingest.py<br>SemanticChunker(LangChain) using bge-base-en-v1.5 as embedding model via sentence-transformers (512 token window)"]
+          C --> D[chroma_store.py]
+     end
+
+     D --> |Store vectors + metadata using bge-base-en-v1.5 as embedding model| DB
+
+     subgraph Group2 ["Online per user query"]
+          E[User query] --> |1. Send query| F[retriever.py<br>]
+          F --> |2. Call ChromaDB| G[chroma_store.py]
+          F --> |5. Reconcile returned chunks and bundle| H[generator.py]
+          H --> |6. Format and call for llama-3.3-70b-versatile API for generation| I[Groq]
+          I --> |7. Return a response| H
+          H --> |8. Send Groq's response back| J[Gradio UI]
+     end
+
+     G --> |3. Embed user query with bge-base-en-v1.5 and perform vector similarity search vectors, metadata and distances| DB
+     DB --> |4. Return top-k chunks| F
+```
 
 ---
 
@@ -120,8 +148,10 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
      "I'll give Claude my Chunking Strategy section and ask it to implement chunk_text()
      with my specified chunk size and overlap" is a plan. -->
 
-**Milestone 3 — Ingestion and chunking:**
+**Milestone 3 — Ingestion and chunking:** 
+- Use Claude Code (Opus 4.8) to write a web scraping script to scrape all game guide articles from both official and unofficial Travian websites based on an instructional comment in `./scripts/scrape_articles.py`. The output of the web scraper would be a set of markdown documents with content from the online guides. The scraped guides will be spot checked for content and hierarchical correctness.
+- Use Claude Code (Sonnet 4.6) to write `ingest.py` that would include document loading, markdown cleaning, semantic chunking using LangChain with bge-base-en-v1.5 for embedding. The inputs provided will be Chunking Strategy, Architecture, and a few documents from Documents as samples. The output should include `load_documents()`, `clean_documents()`, `chunk_documents(text, metadata)` and `semantic_chunking(text)`. The verification includes manual comparison of implementation against spec, running `py ingest.py` and spot check output chunks, and creation of `chroma_db` folder.
 
-**Milestone 4 — Embedding and retrieval:**
+**Milestone 4 — Embedding and retrieval:** Use Claude Code to write `chroma_store.py` to store vectors and metadatas, and allow retrieval from ChromaDB, and `retriever.py` responsible for reconciling returned chunks for the generator. The inputs provided will be Retrieval Approach and Architecture. The output should include `embed_and_store(chunks)` and `retrieve(query, n_results)`. The verification includes manual comparison between specs and implementation and spot check retrieved chunks for the correct format and correct chunks against Evaluation Plan.
 
-**Milestone 5 — Generation and interface:**
+**Milestone 5 — Generation and interface:** Use Claude Code to write `generator.py` to call Groq and generate a response, and build an interface for chatting using Gradio in `app.py` and wire together all functionalities inside `app.py`. The response from generator should be grounded in the provided documents only and the LLM should be able to provide reference to each point it generates with the document name from where it gets the content. The inputs provided will be Architecture and grounding prompts + examples. The output should include `generate_response(query, retrieved_chunks)`, `run_ingestion()`, `chat(message, history)`, Gradio UI and a main function. The verification includes checking responses against Evaluation Plan and running `py ingest.py` and test messaging on localhost.
