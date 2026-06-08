@@ -10,6 +10,7 @@
 ## Domain
 
 <!-- What domain did you choose? Why is this knowledge valuable and hard to find through official channels? -->
+Travian is a classic, browser-based massively multiplayer online real-time strategy (MMORTS) game originally released in 2004. The game has gone through several iterations and updates and have released over 4 versions and is still evolving on a regular basis. The game features several tribes, specializing in different strategic placements and combat abilities. The ever evolving nature has left the game with less up-to-date documents, combined with the deletion of official documents, the information becomes more difficult for players to find through just official channels.
 
 ---
 
@@ -20,16 +21,20 @@
 
 | # | Source | Description | URL or location |
 |---|--------|-------------|-----------------|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
-| 6 | | | |
-| 7 | | | |
-| 8 | | | |
-| 9 | | | |
-| 10 | | | |
+| 1 | Official: The Tribes and Their Advantages | Tribes comparison before beginning the game | https://support.travian.com/en/articles/3-the-tribes-and-their-advantages |
+| 2 | Official: Interacting with Other Players | Basic interaction with other players | https://support.travian.com/en/articles/11-interacting-with-other-players |
+| 3 | Official: Beginner's Protection
+ | Protection at the start of the server | https://support.travian.com/en/articles/12-beginner-s-protection |
+| 4 | Official: Troop Upgrades and Smithy
+ | Troop upgrades information | https://support.travian.com/en/articles/40-troop-upgrades-and-smithy |
+| 5 | Official: Culture Points (CP) | Village expansion system and how to grow | https://support.travian.com/en/articles/51-culture-points-cp |
+| 6 | Unofficial: Combat Basics (written by kirilloid) | Combat system formula | https://unofficialtravian.com/2025/01/game-secrets-combat-basics-written-by-kirilloid/ |
+| 7 | Unofficial: Sniping waves | Advanced gameplay technique against offenders | https://unofficialtravian.com/2025/01/game-secrets-sniping-waves/ |
+| 8 | Unofficial: Your very first steps in the game | First steps guide for first timers | https://unofficialtravian.com/2025/01/game-secrets-your-very-first-steps-in-the-game/ |
+| 9 | Unofficial: How to avoid getting farmed? | Top tricks to avoid survive early gameworld | https://unofficialtravian.com/2025/01/how-to-avoid-getting-farmed/ |
+| 10 | Unofficial: Developing your first villages | Development guide for first timers | https://unofficialtravian.com/2025/01/developing-your-first-villages/ |
+| 11-203 | Official guides | The rest of official gameplay guides | Refer to /scraped.md |
+| 203-267 | Unofficial guides | The rest of unofficial gameplay guides | Refer to /scraped.md |
 
 ---
 
