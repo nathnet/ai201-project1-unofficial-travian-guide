@@ -1,7 +1,7 @@
 # Spec: App Functions
 
 **File:** `app.py`
-**Status:** Specification — implement these functions in Milestone 5.
+**Status:** Complete.
 
 ---
 
@@ -23,7 +23,7 @@ Check whether the ChromaDB collection already contains chunks via `chroma_store.
 
 ## `chat(message, history)`
 
-**Status:** Not yet implemented.
+**Status:** Implemented.
 
 ### Purpose
 
@@ -46,7 +46,7 @@ The generated response string returned by `generator.generate_response()`.
 
 ## `build_ui()`
 
-**Status:** Not yet implemented.
+**Status:** Implemented.
 
 ### Purpose
 

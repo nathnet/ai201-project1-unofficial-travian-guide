@@ -1,9 +1,12 @@
 import sys
 sys.stdout.reconfigure(encoding="utf-8")
 
+import gradio as gr
+
 import chroma_store
 from ingest import load_documents, clean_document, chunk_document
 from retriever import retrieve
+from generator import generate_response
 
 
 def run_ingestion() -> None:
@@ -31,8 +34,51 @@ def run_ingestion() -> None:
     chroma_store.embed_and_store(all_chunks)
     print("Ingestion completed.")
 
+def chat(message: str, history: list) -> str:
+    """Handle a single chat turn — retrieve relevant chunks and generate a grounded response."""
+    if not message.strip():
+        return "Please enter a question about Travian: Legends."
+    chunks = retrieve(message.strip())
+    return generate_response(message.strip(), chunks)
+
+
+def build_ui() -> gr.Blocks:
+    """Construct and return the Gradio Blocks UI."""
+    documents = load_documents()
+    guide_items = []
+    for doc in sorted(documents, key=lambda d: (d["metadata"]["type"], d["metadata"]["source"])):
+        label = "Official" if doc["metadata"]["type"] == "official" else "Unofficial"
+        name = doc["metadata"]["source"].replace(".md", "").replace("-", " ").title()
+        guide_items.append(f"<li><b>{label}:</b> {name}</li>")
+    guides_html = f"<ul style='padding-left:1rem'>{''.join(guide_items)}</ul>" if guide_items else "<p>No guides loaded.</p>"
+
+    with gr.Blocks(title="The Unofficial Travian Guide") as demo:
+        gr.Markdown("# The Unofficial Travian Guide\nAsk anything about Travian: Legends — tribes, combat, buildings, and more.")
+
+        with gr.Row():
+            with gr.Column(scale=3):
+                gr.ChatInterface(
+                    fn=chat,
+                    chatbot=gr.Chatbot(height=500),
+                    examples=[
+                        "What is wave sniping?",
+                        "Which tribe can build resource fields and buildings at the same time without Travian Plus?",
+                        "What is an operational hammer?",
+                        "How do you win a Travian: Legends server?",
+                        "What are the strengths of Gauls?",
+                    ],
+                )
+            with gr.Column(scale=2):
+                gr.Markdown("### Loaded Game Guides")
+                gr.HTML(f"<div style='height:500px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:6px; padding:0.5rem'>{guides_html}</div>")
+
+    return demo
+
+
 if __name__ == "__main__":
     print("\n" + "="*50)
     print("  TravianGuide — starting up")
     print("="*50 + "\n")
     run_ingestion()
+    ui = build_ui()
+    ui.launch()

@@ -1,13 +1,13 @@
 # Spec: Generation Functions
 
 **File:** `generator.py`
-**Status:** Specification — implement these functions in Milestone 5.
+**Status:** Complete.
 
 ---
 
 ## `generate_response(query, retrieved_chunks)`
 
-**Status:** Not yet implemented.
+**Status:** Implemented.
 
 ### Purpose
 
