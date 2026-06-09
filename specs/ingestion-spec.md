@@ -1,7 +1,7 @@
 # Spec: Ingestion Functions
 
 **File:** `ingest.py`
-**Status:** Implemented
+**Status:** Complete.
 
 ---
 

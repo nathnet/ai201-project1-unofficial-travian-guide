@@ -1,13 +1,13 @@
 # Spec: Retrieval Functions
 
 **File:** `retriever.py`
-**Status:** Specification — implement these functions in Milestone 4.
+**Status:** Complete.
 
 ---
 
 ## `retrieve(query, n_results)`
 
-**Status:** Not yet implemented.
+**Status:** Implemented.
 
 ### Purpose
 
@@ -20,7 +20,7 @@ Entry point for retrieval called by `generator.py`. Calls `chroma_store.query()`
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `query` | `str` | The user's query string |
-| `n_results` | `int` | Number of top chunks to retrieve, defaults to `5` |
+| `n_results` | `int` | Number of top chunks to retrieve, defaults to `10` |
 
 **Output:** `list[dict]`
 
@@ -32,4 +32,4 @@ Each dict contains exactly these keys:
 | `"metadata"` | `dict` | Contains `"type"` and `"source"` for citation in the generated response |
 | `"distance"` | `float` | Cosine distance score — lower means more similar |
 
-Only chunks with a distance below the threshold (default `0.7`) are included. Returns an empty list `[]` if the collection is empty or no chunks pass the threshold.
+Only chunks with a distance below the threshold (default `0.4`) are included. Returns an empty list `[]` if the collection is empty or no chunks pass the threshold.

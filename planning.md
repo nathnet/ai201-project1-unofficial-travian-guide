@@ -73,7 +73,7 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
 
 **Embedding model:** bge-base-en-v1.5
 
-**Top-k:** 5 with distance threshold below 0.7
+**Top-k:** 10 with distance threshold below 0.4
 
 **Production tradeoff reflection:** For production, I'd raise the top-k to be 10 to allow more related queries to be passed to Groq to provide a better cross-referenced response for queries with higher complexities. Without constraints, I'd choose Gemini Embedding 2 for multi-modal support since players may sometimes ask problems using screenshots of their game and it also supports multi-lingual, which supports non-English speakers who are main player base for this game. Gemini embedding 2 can also handle niche gaming jargons and responds with low latency, optimized for real-time needs.
 
@@ -111,6 +111,8 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
 4. **Specific references for each paragraph for long query:** A query with multiple questions will trigger more retrievals to be used. This can make it difficult for the LLM to provide good reference at the right spot if there are 2 answers within the same paragraph.
 
 5. **Names not recognized semantically:** There are several names i.e. Praetorian, Druidrider, Paladin, etc. The names may not be well connected to the information and context around it as the names contain no meanings within themselves.
+
+6. **Abstract query phrasing mismatches domain-specific terminology:** When users ask abstract questions (e.g. "How do you win?" or "What is the victory condition?"), the embedding model may match on surface-level vocabulary rather than the underlying concept. "Victory condition" maps strongly to special server Victory Points content, while the normal server win condition ("build a World Wonder to level 100") never uses that phrasing. Without query expansion or hybrid search, pure semantic retrieval cannot bridge this gap.
 
 ---
 
@@ -164,6 +166,6 @@ flowchart TD
 - Use Claude Code (Opus 4.8) to write a web scraping script to scrape all game guide articles from both official and unofficial Travian websites based on an instructional comment in `./scripts/scrape_articles.py`. The output of the web scraper would be a set of markdown documents with content from the online guides. The scraped guides will be spot checked for content and hierarchical correctness.
 - Use Claude Code (Sonnet 4.6) to write `ingest.py` that would include document loading, markdown cleaning, semantic chunking using chonkie-ai/chonkie's `SemanticChunker` with bge-base-en-v1.5 for embedding. The inputs provided will be Chunking Strategy, Architecture, and a few documents from Documents as samples. The output should include `load_documents()`, `clean_document()`, `chunk_document(text, metadata)` and `semantic_chunking(text, metadata)`. The verification includes manual comparison of implementation against spec, running `py ingest.py` and spot check output chunks, and creation of `chroma_db` folder.
 
-**Milestone 4 — Embedding and retrieval:** Use Claude Code to write `chroma_store.py` to store vectors and metadatas, and allow retrieval from ChromaDB, and `retriever.py` responsible for reconciling returned chunks for the generator. The inputs provided will be Retrieval Approach and Architecture. The output should include `embed_and_store(chunks)` and `retrieve(query, n_results)`. The verification includes manual comparison between specs and implementation and spot check retrieved chunks for the correct format and correct chunks against Evaluation Plan.
+**Milestone 4 — Embedding and retrieval:** Use Claude Code to write `chroma_store.py` to store vectors and metadatas, and allow retrieval from ChromaDB, and `retriever.py` responsible for reconciling returned chunks for the generator. The inputs provided will be Retrieval Approach and Architecture. The output should include `get_collection_size()`, `embed_and_store(chunks)`, `query(query_text, n_results` and `retrieve(query, n_results)`. The verification includes manual comparison between specs and implementation and spot check retrieved chunks for the correct format and correct chunks against Evaluation Plan.
 
 **Milestone 5 — Generation and interface:** Use Claude Code to write `generator.py` to call Groq and generate a response, and build an interface for chatting using Gradio in `app.py` and wire together all functionalities inside `app.py`. The response from generator should be grounded in the provided documents only and the LLM should be able to provide reference to each point it generates with the document name from where it gets the content. The inputs provided will be Architecture and grounding prompts + examples. The output should include `generate_response(query, retrieved_chunks)`, `run_ingestion()`, `chat(message, history)`, Gradio UI and a main function. The verification includes checking responses against Evaluation Plan and running `py ingest.py` and test messaging on localhost.

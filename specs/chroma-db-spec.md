@@ -1,13 +1,13 @@
 # Spec: ChromaDB Store Functions
 
 **File:** `chroma_store.py`
-**Status:** Specification — implement these functions in Milestone 4.
+**Status:** Complete.
 
 ---
 
 ## `get_collection_size()`
 
-**Status:** Not yet implemented.
+**Status:** Implemented.
 
 ### Purpose
 
@@ -25,7 +25,7 @@ The total number of chunks stored in the collection. Returns `0` if the collecti
 
 ## `embed_and_store(chunks)`
 
-**Status:** Not yet implemented.
+**Status:** Implemented.
 
 ### Purpose
 
@@ -52,9 +52,9 @@ Each chunk is stored in ChromaDB as:
 
 ---
 
-## `query(query, n_results)`
+## `query(query_text, n_results)`
 
-**Status:** Not yet implemented.
+**Status:** Implemented.
 
 ### Purpose
 
@@ -66,7 +66,7 @@ Embed the query using `bge-base-en-v1.5` and run a cosine similarity search agai
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `query` | `str` | The user's query string |
+| `query_text` | `str` | The user's query string |
 | `n_results` | `int` | Number of top chunks to return |
 
 **Output:** `dict`

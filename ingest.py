@@ -1,11 +1,16 @@
 import re
-from pathlib import Path
 
 from chonkie import SemanticChunker
 from chonkie.embeddings import SentenceTransformerEmbeddings
 
-
-DOCUMENTS_DIR = Path(__file__).parent.parent / "documents"
+from config import (
+    DOCUMENTS_DIR,
+    EMBEDDING_MODEL,
+    CHUNK_THRESHOLD,
+    CHUNK_SIZE,
+    MIN_SENTENCES_PER_CHUNK,
+    MIN_CHARACTERS_PER_SENTENCE,
+)
 
 _chunker = None
 
@@ -13,13 +18,13 @@ _chunker = None
 def _get_chunker():
     global _chunker
     if _chunker is None:
-        embeddings = SentenceTransformerEmbeddings("BAAI/bge-base-en-v1.5")
+        embeddings = SentenceTransformerEmbeddings(EMBEDDING_MODEL)
         _chunker = SemanticChunker(
             embedding_model=embeddings,
-            threshold=0.6,
-            chunk_size=512,
-            min_sentences_per_chunk=2,
-            min_characters_per_sentence=50
+            threshold=CHUNK_THRESHOLD,
+            chunk_size=CHUNK_SIZE,
+            min_sentences_per_chunk=MIN_SENTENCES_PER_CHUNK,
+            min_characters_per_sentence=MIN_CHARACTERS_PER_SENTENCE,
         )
     return _chunker
 

@@ -7,7 +7,7 @@
 
 ## `run_ingestion()`
 
-**Status:** Not yet implemented.
+**Status:** Implemented.
 
 ### Purpose
 
