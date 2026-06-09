@@ -39,7 +39,7 @@ def chat(message: str, history: list) -> str:
     if not message.strip():
         return "Please enter a question about Travian: Legends."
     chunks = retrieve(message.strip())
-    return generate_response(message.strip(), chunks)
+    return generate_response(message.strip(), chunks, history)
 
 
 def build_ui() -> gr.Blocks:

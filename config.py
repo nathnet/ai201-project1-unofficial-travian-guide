@@ -28,3 +28,4 @@ DISTANCE_THRESHOLD = 0.4
 # Generation
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = "llama-3.3-70b-versatile"
+HISTORY_TURNS = 3

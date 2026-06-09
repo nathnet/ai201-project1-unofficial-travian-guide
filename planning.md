@@ -169,3 +169,45 @@ flowchart TD
 **Milestone 4 — Embedding and retrieval:** Use Claude Code to write `chroma_store.py` to store vectors and metadatas, and allow retrieval from ChromaDB, and `retriever.py` responsible for reconciling returned chunks for the generator. The inputs provided will be Retrieval Approach and Architecture. The output should include `get_collection_size()`, `embed_and_store(chunks)`, `query(query_text, n_results` and `retrieve(query, n_results)`. The verification includes manual comparison between specs and implementation and spot check retrieved chunks for the correct format and correct chunks against Evaluation Plan.
 
 **Milestone 5 — Generation and interface:** Use Claude Code to write `generator.py` to call Groq and generate a response, and build an interface for chatting using Gradio in `app.py` and wire together all functionalities inside `app.py`. The response from generator should be grounded in the provided documents only and the LLM should be able to provide reference to each point it generates with the document name from where it gets the content. The inputs provided will be Architecture and grounding prompts + examples. The output should include `generate_response(query, retrieved_chunks)`, `run_ingestion()`, `chat(message, history)`, Gradio UI and a main function. The verification includes checking responses against Evaluation Plan and running `py ingest.py` and test messaging on localhost.
+
+---
+
+## Stretch Features
+
+### 1. Hybrid Search
+
+**Approach:** Combine semantic search (ChromaDB + bge-base-en-v1.5) with keyword search (BM25 via `rank_bm25`) and merge results using Reciprocal Rank Fusion (RRF). The BM25 index is built in-memory at startup from all stored chunks. Both result lists are merged by RRF score and the top-k are returned. This addresses the semantic mismatch problem identified in Anticipated Challenge #6.
+
+**Changes:** New `bm25_search()` and `hybrid_retrieve()` in `retriever.py`; BM25 index built once in `chroma_store.py` or `retriever.py` at startup; UI toggle to switch between semantic-only and hybrid mode.
+
+**Verification:** Run Evaluation Plan questions — confirm "How do you win?" now surfaces `world-wonder.md` in hybrid mode but not in semantic-only mode. Compare result sets side by side.
+
+---
+
+### 2. Chunking Strategy Comparison
+
+**Approach:** Implement a second chunking strategy — recursive character splitting using `langchain_text_splitters.RecursiveCharacterTextSplitter` (chunk size 512, overlap 50) — alongside the existing semantic chunker. Store each strategy's chunks in a separate ChromaDB collection (`travian_guide_semantic` and `travian_guide_recursive`). Run the 5 Evaluation Plan queries against both and report which returned more relevant chunks and why.
+
+**Changes:** New `recursive_chunking()` in `ingest.py`; second collection in `chroma_store.py`; comparison script `scripts/compare_chunking.py` that prints side-by-side results.
+
+**Verification:** Spot-check chunks from both strategies for coherence; run all 5 evaluation queries and document findings in a comparison table in this file.
+
+---
+
+### 3. Metadata Filtering
+
+**Approach:** Allow users to filter retrieved chunks by source type (Official / Unofficial / Both) via a radio button in the Gradio UI. The selected filter is passed to `retrieve()` and applied as a ChromaDB `where` clause before similarity search.
+
+**Changes:** `retrieve()` gains an optional `source_type` parameter (`"official"`, `"unofficial"`, or `None` for both); `chat()` and `build_ui()` updated to pass the filter through; radio button added to sidebar.
+
+**Verification:** Select "Official only" and confirm all returned chunks have `type == "official"`; repeat for "Unofficial only".
+
+---
+
+### 4. Conversational Memory
+
+**Approach:** Pass the Gradio chat `history` into `generate_response()` so the LLM can answer follow-up questions with awareness of prior turns. History is formatted as alternating user/assistant messages and prepended to the prompt. A rolling window of the last 6 turns is kept to avoid exceeding Groq's context limit.
+
+**Changes:** `generate_response()` gains an optional `history` parameter; `chat()` passes `history` through; system prompt updated to instruct the LLM to use prior context when relevant while still grounding factual claims in retrieved chunks only.
+
+**Verification:** Ask "What are the strengths of Romans?" then follow up with "How do they compare to Gauls?" — confirm the second response understands "they" refers to Romans without re-stating the full question.
