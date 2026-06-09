@@ -1,21 +1,24 @@
 import re
 
-from chonkie import SemanticChunker
+from chonkie import RecursiveChunker, SemanticChunker
 from chonkie.embeddings import SentenceTransformerEmbeddings
 
 from config import (
     DOCUMENTS_DIR,
     EMBEDDING_MODEL,
-    CHUNK_THRESHOLD,
+    ChunkingStrategy,
+    CHUNKING_STRATEGY,
     CHUNK_SIZE,
+    CHUNK_THRESHOLD,
     MIN_SENTENCES_PER_CHUNK,
     MIN_CHARACTERS_PER_SENTENCE,
 )
 
 _chunker = None
+_recursive_chunker = None
 
 
-def _get_chunker():
+def _get_semantic_chunker():
     global _chunker
     if _chunker is None:
         embeddings = SentenceTransformerEmbeddings(EMBEDDING_MODEL)
@@ -27,6 +30,16 @@ def _get_chunker():
             min_characters_per_sentence=MIN_CHARACTERS_PER_SENTENCE,
         )
     return _chunker
+
+
+def _get_recursive_chunker():
+    global _recursive_chunker
+    if _recursive_chunker is None:
+        _recursive_chunker = RecursiveChunker(
+            tokenizer=EMBEDDING_MODEL,
+            chunk_size=CHUNK_SIZE,
+        )
+    return _recursive_chunker
 
 
 def load_documents() -> list[dict]:
@@ -174,13 +187,16 @@ def clean_document(text: str) -> str:
 def chunk_document(text: str, metadata: dict) -> list[dict]:
     """Orchestrate chunking of a single document's cleaned text.
 
-    Delegates to semantic_chunking(). Any alternative strategy must share
-    the same (text, metadata) signature and list[dict] return shape.
+    Dispatches to the strategy set by CHUNKING_STRATEGY in config.py:
+      - "semantic"  → SemanticChunker (default)
+      - "recursive" → RecursiveChunker
 
     Returns [] if text is empty.
     """
     if not text:
         return []
+    if CHUNKING_STRATEGY == ChunkingStrategy.RECURSIVE:
+        return recursive_chunking(text, metadata)
     return semantic_chunking(text, metadata)
 
 
@@ -200,7 +216,38 @@ def semantic_chunking(text: str, metadata: dict) -> list[dict]:
     if not text:
         return []
 
-    chunker = _get_chunker()
+    chunker = _get_semantic_chunker()
+    raw_chunks = chunker.chunk(text)
+
+    doc_type = metadata["type"]
+    source = metadata["source"]
+
+    chunks = []
+    for order, chunk in enumerate(raw_chunks):
+        if chunk.text.strip():
+            chunks.append({
+                "text": chunk.text,
+                "chunk_id": f"{doc_type}_{source}_{order}",
+                "metadata": {"type": doc_type, "source": source},
+            })
+
+    return chunks
+
+
+def recursive_chunking(text: str, metadata: dict) -> list[dict]:
+    """Chunk cleaned document text using chonkie's RecursiveChunker with bge-base-en-v1.5.
+
+    Splits text hierarchically (paragraphs → sentences → words → characters)
+    up to a 512-token limit measured by the actual bge-base-en-v1.5 tokenizer,
+    guaranteeing every chunk fits within the embedding model's context window.
+    No overlap — splits at natural boundaries rather than a sliding window.
+
+    Returns the same list[dict] shape as semantic_chunking().
+    """
+    if not text:
+        return []
+
+    chunker = _get_recursive_chunker()
     raw_chunks = chunker.chunk(text)
 
     doc_type = metadata["type"]

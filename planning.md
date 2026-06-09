@@ -186,9 +186,9 @@ flowchart TD
 
 ### 2. Chunking Strategy Comparison
 
-**Approach:** Implement a second chunking strategy — recursive character splitting using `langchain_text_splitters.RecursiveCharacterTextSplitter` (chunk size 512, overlap 50) — alongside the existing semantic chunker. Store each strategy's chunks in a separate ChromaDB collection (`travian_guide_semantic` and `travian_guide_recursive`). Run the 5 Evaluation Plan queries against both and report which returned more relevant chunks and why.
+**Approach:** Implement a second chunking strategy — recursive splitting using chonkie's `RecursiveChunker` — alongside the existing semantic chunker. `RecursiveChunker` is initialized with `tokenizer='BAAI/bge-base-en-v1.5'` and `chunk_size=512` so the limit is measured in actual model tokens (not characters), guaranteeing all chunks fit within the embedding model's 512-token window and keeping the comparison apples-to-apples. Store each strategy's chunks in a separate ChromaDB collection (`travian_guide_semantic` and `travian_guide_recursive`). Run the 5 Evaluation Plan queries against both and report which returned more relevant chunks and why.
 
-**Changes:** New `recursive_chunking()` in `ingest.py`; second collection in `chroma_store.py`; comparison script `scripts/compare_chunking.py` that prints side-by-side results.
+**Changes:** New `recursive_chunking()` in `ingest.py`; second collection in `chroma_store.py`.
 
 **Verification:** Spot-check chunks from both strategies for coherence; run all 5 evaluation queries and document findings in a comparison table in this file.
 

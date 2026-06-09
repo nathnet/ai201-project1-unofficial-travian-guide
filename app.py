@@ -4,6 +4,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 import gradio as gr
 
 import chroma_store
+from config import SourceFilter, SearchMode
 from ingest import load_documents, clean_document, chunk_document
 from retriever import retrieve, hybrid_retrieve, build_bm25_index
 from generator import generate_response
@@ -34,12 +35,12 @@ def run_ingestion() -> None:
     chroma_store.embed_and_store(all_chunks)
     print("Ingestion completed.")
 
-def chat(message: str, history: list, source_filter: str = "All", search_mode: str = "Semantic") -> str:
+def chat(message: str, history: list, source_filter: str = SourceFilter.ALL.value, search_mode: str = SearchMode.VECTOR.value) -> str:
     """Handle a single chat turn — retrieve relevant chunks and generate a grounded response."""
     if not message.strip():
         return "Please enter a question about Travian: Legends."
-    source_type = None if source_filter == "All" else source_filter.lower()
-    if search_mode == "Hybrid":
+    source_type = None if source_filter == SourceFilter.ALL.value else source_filter.lower()
+    if search_mode == SearchMode.HYBRID.value:
         chunks = hybrid_retrieve(message.strip(), source_type=source_type)
     else:
         chunks = retrieve(message.strip(), source_type=source_type)
@@ -66,22 +67,22 @@ def build_ui() -> gr.Blocks:
                     chatbot=gr.Chatbot(height=500),
                     additional_inputs=[
                         gr.Radio(
-                            choices=["All", "Official", "Unofficial"],
-                            value="All",
+                            choices=[f.value for f in SourceFilter],
+                            value=SourceFilter.ALL.value,
                             label="Source Filter",
                         ),
                         gr.Radio(
-                            choices=["Semantic", "Hybrid"],
-                            value="Semantic",
+                            choices=[m.value for m in SearchMode],
+                            value=SearchMode.VECTOR.value,
                             label="Search Mode",
                         ),
                     ],
                     examples=[
-                        ["What is wave sniping?", "All", "Semantic"],
-                        ["Which tribe can build resource fields and buildings at the same time without Travian Plus?", "All", "Semantic"],
-                        ["What is an operational hammer?", "All", "Semantic"],
-                        ["How do you win a Travian: Legends server?", "All", "Hybrid"],
-                        ["What are the strengths of Gauls?", "All", "Semantic"],
+                        ["What is wave sniping?", SourceFilter.ALL.value, SearchMode.VECTOR.value],
+                        ["Which tribe can build resource fields and buildings at the same time without Travian Plus?", SourceFilter.ALL.value, SearchMode.VECTOR.value],
+                        ["What is an operational hammer?", SourceFilter.ALL.value, SearchMode.VECTOR.value],
+                        ["How do you win a Travian: Legends server?", SourceFilter.ALL.value, SearchMode.HYBRID.value],
+                        ["What are the strengths of Gauls?", SourceFilter.ALL.value, SearchMode.VECTOR.value],
                     ],
                 )
             with gr.Column(scale=2):
