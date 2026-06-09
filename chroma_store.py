@@ -44,6 +44,19 @@ def embed_and_store(chunks: list[dict]) -> None:
     print(f"Stored {collection.count()} chunks in ChromaDB.")
 
 
+def get_all_chunks() -> list[dict]:
+    """Return all stored chunks as a list of dicts with 'id', 'text', and 'metadata' keys."""
+    collection = _get_collection()
+    if collection.count() == 0:
+        return []
+
+    result = collection.get(include=["documents", "metadatas"])
+    return [
+        {"id": id_, "text": text, "metadata": meta}
+        for id_, text, meta in zip(result["ids"], result["documents"], result["metadatas"])
+    ]
+
+
 def query(query_text: str, n_results: int, source_type: str | None = None) -> dict | None:
     """Embed the query with bge-base-en-v1.5 and run a cosine similarity search.
 

@@ -160,3 +160,12 @@
 - *What I gave the AI:*
 - *What it produced:*
 - *What I changed or overrode:*
+
+## Chunking Strategy Comparison
+|Query|Semantic Chunking Response|Response|
+|-|-|-|
+| What is a wave sniping? | Wave sniping, also known as "sniping waves", "cutting waves", or "insert" technique, refers to the defensive tactic of sending troops to land in the tiny time gap between two incoming attack waves, often within the same second or just one second apart (Official: sniping-waves) and (Unofficial: game-secrets-sniping-waves). This technique can prevent significant damage, kill parts of the attacker's siege army, and protect important structures (Official: sniping-waves). |  |
+| Given Travian Plus is off, what tribe can build both resource fields and building simultaneously | The Romans tribe can build one resource field and one building at the same time, due to their "Simultaneous Construction" ability (Official: the-romans-and-their-advantages). |  |
+| What is an operational hammer? | An Operational Hammer, also known as a Working Hammer, is a mid-sized offensive army trained in the Barracks, Stables, and Workshop (without Great Barracks/Great Stables) (Official: building-an-operational-working-hammer). It is meant for daily offensive actions, such as clearing nearby villages, supporting alliance operations, farming inactives, and participating in minor conquests (Official: building-an-operational-working-hammer). A typical Operational Hammer consists of 25,000-35,000 offensive infantry, 6,000-12,000 offensive cavalry, 1,500-2,000 rams, and 1,500-2,000 catapults (Official: building-an-operational-working-hammer). |  |
+| How do you win a Travian: Legends server? | To win a Travian: Legends server, the first player or alliance to build their World Wonder to level 100 wins the server (Official: world-wonder) and (Unofficial: game-secrets-building-a-world-wonder-text-version). Alternatively, the alliance with the highest total Victory Points at the end of the server also wins (Official: special-servers-ancient-powers-and-victory-points). |
+| What are the strengths of Mongolian troops | The available guides don't cover that topic. There is no mention of Mongolian troops in the provided context chunks. Please rephrase or ask something more specific about the tribes mentioned, such as Romans, Gauls, Teutons, Egyptians, Huns, or others. |  |

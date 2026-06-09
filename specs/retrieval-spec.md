@@ -1,7 +1,7 @@
 # Spec: Retrieval Functions
 
 **File:** `retriever.py`
-**Status:** Complete.
+**Status:** Complete — extended with hybrid search (BM25 + semantic + RRF) as a stretch feature.
 
 ---
 
@@ -32,4 +32,26 @@ Each dict contains exactly these keys:
 | `"metadata"` | `dict` | Contains `"type"` and `"source"` for citation in the generated response |
 | `"distance"` | `float` | Cosine distance score — lower means more similar |
 
-Only chunks with a distance below the threshold (default `0.4`) are included. Returns an empty list `[]` if the collection is empty or no chunks pass the threshold.
+Only chunks with a distance below the threshold (default `0.4`) are included. Pass `threshold=None` to skip filtering (used internally by `hybrid_retrieve()`). Returns an empty list `[]` if the collection is empty or no chunks pass the threshold.
+
+---
+
+## Stretch Feature: Hybrid Search
+
+### `build_bm25_index()`
+
+**Status:** Implemented.
+
+Fetches all chunks from ChromaDB and builds an in-memory BM25 index using `bm25s` with an English Snowball stemmer (via `PyStemmer`). Called once at app startup after ingestion. Stores the index and corpus in module-level variables.
+
+### `bm25_search(query, n_results, source_type)`
+
+**Status:** Implemented.
+
+Searches the BM25 index by keyword relevance. Applies the same Snowball stemmer to the query so tokens like "win", "wins", and "winning" match correctly. Fetches up to 50 candidates then filters by `source_type` and returns the top `n_results`. Each result contains `"text"`, `"metadata"`, and `"score"` (higher = more relevant).
+
+### `hybrid_retrieve(query, n_results, source_type)`
+
+**Status:** Implemented.
+
+Merges semantic and BM25 results using Reciprocal Rank Fusion (RRF). Semantic search bypasses the distance threshold (`threshold=None`) and fetches `n_results * 3` candidates so rare matches aren't cut early. RRF score = Σ `1 / (RRF_K + rank + 1)` across both lists. Chunks appearing in both lists receive a boosted score. Returns the same `list[dict]` shape as `retrieve()`, with `"distance"` included only for chunks that appeared in semantic results.

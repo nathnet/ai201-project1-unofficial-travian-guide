@@ -176,11 +176,11 @@ flowchart TD
 
 ### 1. Hybrid Search
 
-**Approach:** Combine semantic search (ChromaDB + bge-base-en-v1.5) with keyword search (BM25 via `rank_bm25`) and merge results using Reciprocal Rank Fusion (RRF). The BM25 index is built in-memory at startup from all stored chunks. Both result lists are merged by RRF score and the top-k are returned. This addresses the semantic mismatch problem identified in Anticipated Challenge #6.
+**Approach:** Combine semantic search (ChromaDB + bge-base-en-v1.5) with keyword search (BM25 via `bm25s`) and merge results using Reciprocal Rank Fusion (RRF). The BM25 index is built in-memory at startup from all stored chunks using an English Snowball stemmer (`PyStemmer`) so query tokens like "win", "wins", and "winning" match correctly. Both result lists are merged by RRF score and the top-k are returned. In hybrid mode the distance threshold is bypassed (`threshold=None`) so RRF acts as the quality signal rather than pre-filtering. This addresses the semantic mismatch problem identified in Anticipated Challenge #6.
 
-**Changes:** New `bm25_search()` and `hybrid_retrieve()` in `retriever.py`; BM25 index built once in `chroma_store.py` or `retriever.py` at startup; UI toggle to switch between semantic-only and hybrid mode.
+**Changes:** New `build_bm25_index()`, `bm25_search()`, and `hybrid_retrieve()` in `retriever.py`; `retrieve()` gains optional `threshold` parameter; BM25 index built at app startup (not inside ingestion) so it runs every launch; UI toggle to switch between semantic-only and hybrid mode.
 
-**Verification:** Run Evaluation Plan questions — confirm "How do you win?" now surfaces `world-wonder.md` in hybrid mode but not in semantic-only mode. Compare result sets side by side.
+**Verification:** Run Evaluation Plan question #4 — confirmed "How do you win?" now surfaces `world-wonder.md` in hybrid mode. Root cause of original failure: "win" (query) vs "wins"/"winning" (document) required stemming to bridge; fixed with PyStemmer Snowball stemmer.
 
 ---
 

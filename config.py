@@ -24,6 +24,9 @@ MIN_CHARACTERS_PER_SENTENCE = 50
 # Retrieval
 N_RESULTS = 10
 DISTANCE_THRESHOLD = 0.4
+# Reciprocal Rank Fusion constant — dampens the influence of top-ranked results,
+# preventing a single list from dominating the merged ranking. Standard value is 60.
+RRF_K = 60
 
 # Generation
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")

@@ -5,7 +5,7 @@ import gradio as gr
 
 import chroma_store
 from ingest import load_documents, clean_document, chunk_document
-from retriever import retrieve
+from retriever import retrieve, hybrid_retrieve, build_bm25_index
 from generator import generate_response
 
 
@@ -34,12 +34,15 @@ def run_ingestion() -> None:
     chroma_store.embed_and_store(all_chunks)
     print("Ingestion completed.")
 
-def chat(message: str, history: list, source_filter: str = "All") -> str:
+def chat(message: str, history: list, source_filter: str = "All", search_mode: str = "Semantic") -> str:
     """Handle a single chat turn — retrieve relevant chunks and generate a grounded response."""
     if not message.strip():
         return "Please enter a question about Travian: Legends."
     source_type = None if source_filter == "All" else source_filter.lower()
-    chunks = retrieve(message.strip(), source_type=source_type)
+    if search_mode == "Hybrid":
+        chunks = hybrid_retrieve(message.strip(), source_type=source_type)
+    else:
+        chunks = retrieve(message.strip(), source_type=source_type)
     return generate_response(message.strip(), chunks, history)
 
 
@@ -66,14 +69,19 @@ def build_ui() -> gr.Blocks:
                             choices=["All", "Official", "Unofficial"],
                             value="All",
                             label="Source Filter",
-                        )
+                        ),
+                        gr.Radio(
+                            choices=["Semantic", "Hybrid"],
+                            value="Semantic",
+                            label="Search Mode",
+                        ),
                     ],
                     examples=[
-                        ["What is wave sniping?", "All"],
-                        ["Which tribe can build resource fields and buildings at the same time without Travian Plus?", "All"],
-                        ["What is an operational hammer?", "All"],
-                        ["How do you win a Travian: Legends server?", "All"],
-                        ["What are the strengths of Gauls?", "All"],
+                        ["What is wave sniping?", "All", "Semantic"],
+                        ["Which tribe can build resource fields and buildings at the same time without Travian Plus?", "All", "Semantic"],
+                        ["What is an operational hammer?", "All", "Semantic"],
+                        ["How do you win a Travian: Legends server?", "All", "Hybrid"],
+                        ["What are the strengths of Gauls?", "All", "Semantic"],
                     ],
                 )
             with gr.Column(scale=2):
@@ -88,5 +96,6 @@ if __name__ == "__main__":
     print("  TravianGuide — starting up")
     print("="*50 + "\n")
     run_ingestion()
+    build_bm25_index()
     ui = build_ui()
     ui.launch()

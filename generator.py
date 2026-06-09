@@ -39,9 +39,10 @@ def generate_response(query: str, retrieved_chunks: list[dict], history: list | 
     for chunk in retrieved_chunks:
         source = chunk["metadata"]["source"]
         doc_type = chunk["metadata"]["type"]
-        distance = chunk["distance"]
+        distance = chunk.get("distance")
+        distance_str = f"{distance:.4f}" if distance is not None else "n/a"
         context_parts.append(
-            f"(source: {source}, type: {doc_type}, distance: {distance:.4f}) - {chunk['text']}"
+            f"(source: {source}, type: {doc_type}, distance: {distance_str}) - {chunk['text']}"
         )
     context = "\n\n---\n\n".join(context_parts)
 
