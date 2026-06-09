@@ -34,11 +34,12 @@ def run_ingestion() -> None:
     chroma_store.embed_and_store(all_chunks)
     print("Ingestion completed.")
 
-def chat(message: str, history: list) -> str:
+def chat(message: str, history: list, source_filter: str = "All") -> str:
     """Handle a single chat turn — retrieve relevant chunks and generate a grounded response."""
     if not message.strip():
         return "Please enter a question about Travian: Legends."
-    chunks = retrieve(message.strip())
+    source_type = None if source_filter == "All" else source_filter.lower()
+    chunks = retrieve(message.strip(), source_type=source_type)
     return generate_response(message.strip(), chunks, history)
 
 
@@ -60,12 +61,19 @@ def build_ui() -> gr.Blocks:
                 gr.ChatInterface(
                     fn=chat,
                     chatbot=gr.Chatbot(height=500),
+                    additional_inputs=[
+                        gr.Radio(
+                            choices=["All", "Official", "Unofficial"],
+                            value="All",
+                            label="Source Filter",
+                        )
+                    ],
                     examples=[
-                        "What is wave sniping?",
-                        "Which tribe can build resource fields and buildings at the same time without Travian Plus?",
-                        "What is an operational hammer?",
-                        "How do you win a Travian: Legends server?",
-                        "What are the strengths of Gauls?",
+                        ["What is wave sniping?", "All"],
+                        ["Which tribe can build resource fields and buildings at the same time without Travian Plus?", "All"],
+                        ["What is an operational hammer?", "All"],
+                        ["How do you win a Travian: Legends server?", "All"],
+                        ["What are the strengths of Gauls?", "All"],
                     ],
                 )
             with gr.Column(scale=2):

@@ -44,18 +44,22 @@ def embed_and_store(chunks: list[dict]) -> None:
     print(f"Stored {collection.count()} chunks in ChromaDB.")
 
 
-def query(query_text: str, n_results: int) -> dict | None:
+def query(query_text: str, n_results: int, source_type: str | None = None) -> dict | None:
     """Embed the query with bge-base-en-v1.5 and run a cosine similarity search.
 
     Returns the raw ChromaDB response with 'documents', 'metadatas', and
     'distances' keys, or None if the collection is empty.
+    Optionally filters by source type ('official' or 'unofficial').
     """
     collection = _get_collection()
     if collection.count() == 0:
         return None
 
+    where = {"type": source_type} if source_type else None
+
     return collection.query(
         query_texts=[query_text],
         n_results=n_results,
+        where=where,
         include=["documents", "metadatas", "distances"],
     )

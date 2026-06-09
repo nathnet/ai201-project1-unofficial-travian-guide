@@ -2,14 +2,15 @@ import chroma_store
 from config import N_RESULTS, DISTANCE_THRESHOLD
 
 
-def retrieve(query: str, n_results: int = N_RESULTS) -> list[dict]:
+def retrieve(query: str, n_results: int = N_RESULTS, source_type: str | None = None) -> list[dict]:
     """Query ChromaDB and return filtered, reshaped chunks for prompt assembly.
 
-    Applies a distance threshold of 0.7 — chunks with a cosine distance at or
-    above the threshold are excluded. Returns [] if the collection is empty or
+    Applies a distance threshold of 0.4 — chunks with a cosine distance at or
+    above the threshold are excluded. Optionally filters by source type
+    ('official' or 'unofficial'). Returns [] if the collection is empty or
     no chunks pass the threshold.
     """
-    raw = chroma_store.query(query, n_results)
+    raw = chroma_store.query(query, n_results, source_type)
     if raw is None:
         return []
 
