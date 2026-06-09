@@ -33,8 +33,8 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
 | 8 | Unofficial: Your very first steps in the game | First steps guide for first timers | https://unofficialtravian.com/2025/01/game-secrets-your-very-first-steps-in-the-game/ |
 | 9 | Unofficial: How to avoid getting farmed? | Top tricks to avoid survive early gameworld | https://unofficialtravian.com/2025/01/how-to-avoid-getting-farmed/ |
 | 10 | Unofficial: Developing your first villages | Development guide for first timers | https://unofficialtravian.com/2025/01/developing-your-first-villages/ |
-| 11-203 | Official guides | The rest of official gameplay guides | Refer to /scraped.md |
-| 203-267 | Unofficial guides | The rest of unofficial gameplay guides | Refer to /scraped.md |
+| 11-202 | Official guides | The rest of official gameplay guides | Refer to /scraped.md |
+| 203-266 | Unofficial guides | The rest of unofficial gameplay guides | Refer to /scraped.md |
 
 ---
 
@@ -45,7 +45,19 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
      numbers fit the structure of your documents.
      A review-heavy corpus warrants different chunking than a long FAQ. -->
 
-**Chunking strategy:** Semantic chunking using LangChain and bge-base-en-v1.5 as embedding model
+**Chunking strategy:** Semantic chunking using chonkie-ai/chonkie's `SemanticChunker` with `bge-base-en-v1.5` via sentence-transformers
+
+**Chunk size:** Up to 512 tokens (bge-base-en-v1.5 max token window)
+
+**Overlap:** None — chonkie places boundaries at semantic similarity drops, so consecutive chunks are already semantically distinct
+
+**Chunker parameters:**
+- `threshold=0.6`: splits wherever cosine similarity drops below 0.6; selected by sweeping 0.3–0.7 across sample docs — 0.6 produces near one-chunk-per-Q&A on FAQ docs without over-fragmenting formula-heavy content
+- `min_sentences_per_chunk=2`: prevents single-sentence orphan chunks
+- `min_characters_per_sentence=50`: filters short bullet lines (e.g. `- Loyalty is not reduced.`) from being split candidates, reducing list fragmentation
+
+**Pre-processing applied inside `clean_document()` before chunking:**
+- `_attach_table_headers()`: removes the markdown separator row and repeats the header row before each data row, so every chunk containing a table row is self-contained for retrieval
 
 **Reasoning:** Fixed-size chunking is inflexible considering each document tends to have differing writing styles, and can also have references across multiple files. Some documents have all the answers within 200-300 characters, while other span across paragraphs (1000-1500 characters.) Semantic chunking is chosen over recursive chunking in this case since there are a lot of documents that may have answers for different parts of the the question across different documents. It is better to chunk the text semantically to retain its meaning. While recursive chunking can still remain a good fallback as the documents are already formated with hierarchical structure. bge-base-en-v1.5 is chosen over all-MiniLM-L6-v2 in this case to handle higher token windows (256 tokens vs 512 tokens)
 
@@ -92,7 +104,7 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
 
 1. **Inconsistent information across official and unoffical guides:** Two guides are made at different dates, with the official guides being more up-to-date. The unofficial guides are accumulation of old official guides and user-posted guides, which can span across several versions of the game.
 
-2. **Chunk size over token window limit for embedding:** Initial planning utilized `all-MiniLM-L6-v2` for embedding, but then I soon realized the limitations of 256 tokens limit with the semantic chunking potentially using 400-512 tokens each chunk.
+2. **Chunk size over token window limit for embedding:** Initial planning utilized `all-MiniLM-L6-v2` for tokenization and embedding, but then I soon realized the limitations of 256 tokens limit with the semantic chunking potentially using 400-512 tokens each chunk.
 
 3. **Information mixed up:** There are quite a few different tribes in Travian with many similar strengths/weaknesses i.e. Gauls and Egyptians specializing in defense, but Gauls are fast while Egyptians are slow. The response may return Egyptians as high in defense and fast, from similar information about high defense from Gauls.
 
@@ -115,7 +127,7 @@ flowchart TD
 
      subgraph Group1 ["Offline one-time document processing"]
           A[Raw md input documents] --> B[ingest.py<br>Load, strip markdown syntax, and clean documents before chunking]
-          B --> C["ingest.py<br>SemanticChunker(LangChain) using bge-base-en-v1.5 as embedding model via sentence-transformers (512 token window)"]
+          B --> C["ingest.py<br>chonkie-ai/chonkie SemanticChunker with bge-base-en-v1.5 (threshold=0.6, 512 token window)"]
           C --> D[chroma_store.py]
      end
 
@@ -150,7 +162,7 @@ flowchart TD
 
 **Milestone 3 — Ingestion and chunking:** 
 - Use Claude Code (Opus 4.8) to write a web scraping script to scrape all game guide articles from both official and unofficial Travian websites based on an instructional comment in `./scripts/scrape_articles.py`. The output of the web scraper would be a set of markdown documents with content from the online guides. The scraped guides will be spot checked for content and hierarchical correctness.
-- Use Claude Code (Sonnet 4.6) to write `ingest.py` that would include document loading, markdown cleaning, semantic chunking using LangChain with bge-base-en-v1.5 for embedding. The inputs provided will be Chunking Strategy, Architecture, and a few documents from Documents as samples. The output should include `load_documents()`, `clean_documents()`, `chunk_documents(text, metadata)` and `semantic_chunking(text)`. The verification includes manual comparison of implementation against spec, running `py ingest.py` and spot check output chunks, and creation of `chroma_db` folder.
+- Use Claude Code (Sonnet 4.6) to write `ingest.py` that would include document loading, markdown cleaning, semantic chunking using chonkie-ai/chonkie's `SemanticChunker` with bge-base-en-v1.5 for embedding. The inputs provided will be Chunking Strategy, Architecture, and a few documents from Documents as samples. The output should include `load_documents()`, `clean_document()`, `chunk_document(text, metadata)` and `semantic_chunking(text, metadata)`. The verification includes manual comparison of implementation against spec, running `py ingest.py` and spot check output chunks, and creation of `chroma_db` folder.
 
 **Milestone 4 — Embedding and retrieval:** Use Claude Code to write `chroma_store.py` to store vectors and metadatas, and allow retrieval from ChromaDB, and `retriever.py` responsible for reconciling returned chunks for the generator. The inputs provided will be Retrieval Approach and Architecture. The output should include `embed_and_store(chunks)` and `retrieve(query, n_results)`. The verification includes manual comparison between specs and implementation and spot check retrieved chunks for the correct format and correct chunks against Evaluation Plan.
 
