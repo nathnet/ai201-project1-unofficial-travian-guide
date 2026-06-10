@@ -23,10 +23,8 @@ Travian is a classic, browser-based massively multiplayer online real-time strat
 |---|--------|-------------|-----------------|
 | 1 | Official: The Tribes and Their Advantages | Tribes comparison before beginning the game | https://support.travian.com/en/articles/3-the-tribes-and-their-advantages |
 | 2 | Official: Interacting with Other Players | Basic interaction with other players | https://support.travian.com/en/articles/11-interacting-with-other-players |
-| 3 | Official: Beginner's Protection
- | Protection at the start of the server | https://support.travian.com/en/articles/12-beginner-s-protection |
-| 4 | Official: Troop Upgrades and Smithy
- | Troop upgrades information | https://support.travian.com/en/articles/40-troop-upgrades-and-smithy |
+| 3 | Official: Beginner's Protection | Protection at the start of the server | https://support.travian.com/en/articles/12-beginner-s-protection |
+| 4 | Official: Troop Upgrades and Smithy | Troop upgrades information | https://support.travian.com/en/articles/40-troop-upgrades-and-smithy |
 | 5 | Official: Culture Points (CP) | Village expansion system and how to grow | https://support.travian.com/en/articles/51-culture-points-cp |
 | 6 | Unofficial: Combat Basics (written by kirilloid) | Combat system formula | https://unofficialtravian.com/2025/01/game-secrets-combat-basics-written-by-kirilloid/ |
 | 7 | Unofficial: Sniping waves | Advanced gameplay technique against offenders | https://unofficialtravian.com/2025/01/game-secrets-sniping-waves/ |
